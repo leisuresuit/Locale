@@ -3,5 +3,7 @@
     <string name="search">Search</string>
     <string name="root_or_permission_required">For Android 4.2 and later, either root/su or android.permission.CHANGE_CONFIGURATION is required.\n\nTo grant permission, in the command line, enter:\n\nadb shell pm grant %1$s android.permission.CHANGE_CONFIGURATION\n\n(Assumes familiarity with Android SDK).</string>
     <string name="accessibility_progress_indicator">In Progress</string>
+    <string name="app_widget_config">Select a locale</string>
     <string name="app_widget_set_locale">Locale set to %1$s</string>
+    <string name="app_widget_root_or_permission_required">To set locale, root/su or android.permission.CHANGE_CONFIGURATION is required.</string>
 </resources>
