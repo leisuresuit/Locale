@@ -1,5 +1,9 @@
 package com.example.locale;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
@@ -26,7 +30,7 @@ import android.widget.Toast;
 
 import com.example.android.supportv7.widget.decorator.DividerItemDecoration;
 import com.example.locale.util.ImageUtil;
-import com.example.locale.util.LocaleUtil;
+import com.example.locale.widget.LocaleService;
 
 import java.util.Locale;
 
@@ -38,6 +42,7 @@ public class MainActivity extends AppCompatActivity implements LocaleAdapter.Loc
     private ContentLoadingProgressBar mLoading;
     private AsyncTask mPaletteTask;
     private String mFilter;
+    private LocaleBroadcastReceiver mLocaleBroadcastReceiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,6 +62,11 @@ public class MainActivity extends AppCompatActivity implements LocaleAdapter.Loc
         initRecyclerView();
 
         showDefaultLocale();
+
+        mLocaleBroadcastReceiver = new LocaleBroadcastReceiver();
+        IntentFilter intentFilter = new IntentFilter(LocaleService.ACTION_LOCALE_SERVICE);
+        intentFilter.addCategory(Intent.CATEGORY_DEFAULT);
+        registerReceiver(mLocaleBroadcastReceiver, intentFilter);
     }
 
     @Override
@@ -85,6 +95,8 @@ public class MainActivity extends AppCompatActivity implements LocaleAdapter.Loc
     public void onDestroy() {
         super.onDestroy();
 
+        unregisterReceiver(mLocaleBroadcastReceiver);
+
         if (mPaletteTask != null) {
             mPaletteTask.cancel(true);
             mPaletteTask = null;
@@ -107,7 +119,6 @@ public class MainActivity extends AppCompatActivity implements LocaleAdapter.Loc
                 @Override
                 protected void onPostExecute(Void ignored) {
                     mLoading.hide();
-
                     mAdapter.notifyDataSetChanged();
                 }
             });
@@ -136,45 +147,15 @@ public class MainActivity extends AppCompatActivity implements LocaleAdapter.Loc
     @Override
     public void onLocale(final Locale locale) {
         if (Locale.getDefault().equals(locale)) {
+            Toast.makeText(MainActivity.this, getString(R.string.app_widget_set_locale, locale.toString()), Toast.LENGTH_SHORT).show();
             return;
         }
 
         mLoading.show();
-
         mFilter = null;
-        AsyncTaskCompat.executeParallel(new AsyncTask<Void, Void, Boolean>() {
-            @Override
-            protected Boolean doInBackground(Void... params) {
-                boolean result = LocaleUtil.setDefaultLocale(MainActivity.this, locale);
-                if (result) {
-                    mAdapter.setFilter(null);
-                }
-                return result;
-            }
-
-            @Override
-            protected void onPostExecute(Boolean result) {
-                mLoading.hide();
-
-                if (result) {
-                    Locale.setDefault(locale);
-                    showDefaultLocale();
-
-                    Configuration config = new Configuration();
-                    config.locale = locale;
-                    Resources resources = getResources();
-                    resources.updateConfiguration(config, resources.getDisplayMetrics());
-
-                    mAdapter.notifyDataSetChanged();
-                    Toast.makeText(MainActivity.this, getString(R.string.app_widget_set_locale, locale.toString()), Toast.LENGTH_SHORT).show();
-                } else {
-                    new AlertDialog.Builder(MainActivity.this)
-                            .setMessage(getString(R.string.root_or_permission_required, getApplicationContext().getPackageName()))
-                            .setPositiveButton(android.R.string.ok, null)
-                            .show();
-                }
-            }
-        });
+        Intent intent = new Intent(this, LocaleService.class);
+        intent.putExtra(LocaleService.EXTRA_LOCALE, locale);
+        startService(intent);
     }
 
     private void showDefaultLocale() {
@@ -204,6 +185,42 @@ public class MainActivity extends AppCompatActivity implements LocaleAdapter.Loc
         Color.colorToHSV(color, hsv);
         hsv[2] *= 0.8f; // value component
         return Color.HSVToColor(hsv);
+    }
+
+    private class LocaleBroadcastReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, final Intent intent) {
+            boolean result = intent.getBooleanExtra(LocaleService.EXTRA_SET_LOCALE_RESULT, false);
+            if (result) {
+                final Locale locale = (Locale) intent.getSerializableExtra(LocaleService.EXTRA_LOCALE);
+                AsyncTaskCompat.executeParallel(new AsyncTask<Void, Void, Void>() {
+                    @Override
+                    protected Void doInBackground(Void... params) {
+                        mAdapter.setFilter(null);
+                        return null;
+                    }
+
+                    @Override
+                    protected void onPostExecute(Void aVoid) {
+                        Locale.setDefault(locale);
+                        showDefaultLocale();
+
+                        Configuration config = new Configuration();
+                        config.locale = locale;
+                        Resources resources = getResources();
+                        resources.updateConfiguration(config, resources.getDisplayMetrics());
+
+                        mAdapter.notifyDataSetChanged();
+                        Toast.makeText(MainActivity.this, getString(R.string.app_widget_set_locale, locale.toString()), Toast.LENGTH_SHORT).show();
+                    }
+                });
+            } else {
+                new AlertDialog.Builder(MainActivity.this)
+                        .setMessage(getString(R.string.root_or_permission_required, getApplicationContext().getPackageName()))
+                        .setPositiveButton(android.R.string.ok, null)
+                        .show();
+            }
+        }
     }
 
 }

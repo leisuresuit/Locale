@@ -30,9 +30,15 @@
 
         <activity android:name=".widget.LocaleAppWidgetConfigActivity">
             <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE"/>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
             </intent-filter>
         </activity>
+
+        <service
+            android:name=".widget.LocaleService"
+            android:enabled="true"
+            android:exported="false" >
+        </service>
 
     </application>
 
