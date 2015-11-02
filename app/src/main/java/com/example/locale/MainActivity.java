@@ -24,8 +24,10 @@ import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.view.Menu;
+import android.view.ViewTreeObserver;
 import android.view.Window;
 import android.view.WindowManager;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Toast;
 
 import com.example.android.supportv7.widget.decorator.DividerItemDecoration;
@@ -34,7 +36,7 @@ import com.example.locale.widget.LocaleService;
 
 import java.util.Locale;
 
-public class MainActivity extends AppCompatActivity implements LocaleAdapter.LocaleListener, SearchView.OnQueryTextListener {
+public class MainActivity extends AppCompatActivity implements LocaleAdapter.LocaleListener, SearchView.OnQueryTextListener, ViewTreeObserver.OnScrollChangedListener {
     private static final String FILTER = "filter";
 
     private LocaleAdapter mAdapter;
@@ -43,6 +45,7 @@ public class MainActivity extends AppCompatActivity implements LocaleAdapter.Loc
     private AsyncTask mPaletteTask;
     private String mFilter;
     private LocaleBroadcastReceiver mLocaleBroadcastReceiver;
+    private SearchView mSearchView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,15 +82,14 @@ public class MainActivity extends AppCompatActivity implements LocaleAdapter.Loc
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_main, menu);
-        SearchView searchView = (SearchView) MenuItemCompat.getActionView(menu.findItem(R.id.action_search));
-        searchView.setOnQueryTextListener(this);
+        mSearchView = (SearchView) MenuItemCompat.getActionView(menu.findItem(R.id.action_search));
+        mSearchView.setOnQueryTextListener(this);
         return true;
     }
 
     @Override
     public boolean onPrepareOptionsMenu(Menu menu) {
-        SearchView searchView = (SearchView) MenuItemCompat.getActionView(menu.findItem(R.id.action_search));
-        searchView.setQuery(mFilter, false);
+        mSearchView.setQuery(mFilter, false);
         return super.onPrepareOptionsMenu(menu);
     }
 
@@ -139,9 +141,16 @@ public class MainActivity extends AppCompatActivity implements LocaleAdapter.Loc
 
     private void initRecyclerView() {
         RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
+        recyclerView.getViewTreeObserver().addOnScrollChangedListener(this);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.addItemDecoration(new DividerItemDecoration(this, DividerItemDecoration.VERTICAL_LIST));
         recyclerView.setAdapter(mAdapter);
+    }
+
+    @Override
+    public void onScrollChanged() {
+        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+        imm.hideSoftInputFromWindow(mSearchView.getWindowToken(), 0);
     }
 
     @Override
