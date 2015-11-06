@@ -7,4 +7,10 @@
         android:title="@string/search"
         app:showAsAction="always"
         app:actionViewClass="android.support.v7.widget.SearchView" />
+
+    <item
+        android:id="@+id/action_licenses"
+        android:title="@string/licenses"
+        app:showAsAction="never" />
+
 </menu>

@@ -24,10 +24,12 @@ import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.view.Menu;
+import android.view.MenuItem;
 import android.view.ViewTreeObserver;
 import android.view.Window;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
+import android.webkit.WebView;
 import android.widget.Toast;
 
 import com.example.android.supportv7.widget.decorator.DividerItemDecoration;
@@ -94,6 +96,17 @@ public class MainActivity extends AppCompatActivity implements LocaleAdapter.Loc
     }
 
     @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_licenses:
+                showLicenses();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    @Override
     public void onDestroy() {
         super.onDestroy();
 
@@ -132,6 +145,16 @@ public class MainActivity extends AppCompatActivity implements LocaleAdapter.Loc
     public boolean onQueryTextSubmit(String query) {
         // no-op
         return true;
+    }
+
+    private void showLicenses() {
+        WebView webView = new WebView(this);
+        webView.loadUrl("file:///android_asset/open_source_licenses.html");
+        new AlertDialog.Builder(MainActivity.this)
+                .setTitle(R.string.licenses_title)
+                .setView(webView)
+                .setPositiveButton(android.R.string.ok, null)
+                .show();
     }
 
     private void initToolbar() {
