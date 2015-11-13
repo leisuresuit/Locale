@@ -26,7 +26,7 @@ import android.support.v7.widget.Toolbar;
 import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.ViewTreeObserver;
+import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
@@ -39,9 +39,12 @@ import com.example.locale.widget.LocaleService;
 
 import java.util.Locale;
 
-public class MainActivity extends AppCompatActivity implements LocaleAdapter.LocaleListener, SearchView.OnQueryTextListener, ViewTreeObserver.OnScrollChangedListener {
 import butterknife.Bind;
 import butterknife.ButterKnife;
+
+public class MainActivity extends AppCompatActivity
+        implements LocaleAdapter.LocaleListener, SearchView.OnQueryTextListener, View.OnClickListener {
+
     private static final String FILTER = "filter";
 
     private LocaleAdapter mAdapter;
@@ -53,6 +56,22 @@ import butterknife.ButterKnife;
     private LocaleBroadcastReceiver mLocaleBroadcastReceiver;
     private SearchView mSearchView;
     @Bind(R.id.add_locale) FloatingActionButton mAddLocale;
+
+    private final RecyclerView.OnScrollListener mScrollListener = new RecyclerView.OnScrollListener() {
+        @Override
+        public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+            if (mSearchView != null) {
+                InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                imm.hideSoftInputFromWindow(mSearchView.getWindowToken(), 0);
+            }
+
+            if (dy > 0) {
+                mAddLocale.hide();
+            } else {
+                mAddLocale.show();
+            }
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -117,6 +136,8 @@ import butterknife.ButterKnife;
 
         unregisterReceiver(mLocaleBroadcastReceiver);
 
+        mRecyclerView.removeOnScrollListener(mScrollListener);
+
         if (mPaletteTask != null) {
             mPaletteTask.cancel(true);
             mPaletteTask = null;
@@ -168,17 +189,10 @@ import butterknife.ButterKnife;
     }
 
     private void initRecyclerView() {
-        RecyclerView recyclerView = (RecyclerView) findViewById(R.id.recyclerView);
-        recyclerView.getViewTreeObserver().addOnScrollChangedListener(this);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        recyclerView.addItemDecoration(new DividerItemDecoration(this, DividerItemDecoration.VERTICAL_LIST));
-        recyclerView.setAdapter(mAdapter);
-    }
-
-    @Override
-    public void onScrollChanged() {
-        InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
-        imm.hideSoftInputFromWindow(mSearchView.getWindowToken(), 0);
+        mRecyclerView.addOnScrollListener(mScrollListener);
+        mRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        mRecyclerView.addItemDecoration(new DividerItemDecoration(this, DividerItemDecoration.VERTICAL_LIST));
+        mRecyclerView.setAdapter(mAdapter);
     }
 
     @Override

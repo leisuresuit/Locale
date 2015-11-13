@@ -6,4 +6,5 @@
     <dimen name="widget_padding">4dp</dimen>
     <dimen name="medium">16dp</dimen>
     <dimen name="locale_name">20sp</dimen>
+    <dimen name="fab_margin">16dp</dimen>
 </resources>
