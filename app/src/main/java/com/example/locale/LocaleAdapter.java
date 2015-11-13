@@ -16,6 +16,9 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 
+import butterknife.Bind;
+import butterknife.ButterKnife;
+
 /**
  * Created by larwang on 10/23/15.
  */
@@ -109,18 +112,16 @@ public class LocaleAdapter extends RecyclerView.Adapter<LocaleAdapter.LocaleView
     }
 
     static class LocaleViewHolder extends RecyclerView.ViewHolder {
-        final ImageView icon;
-        final TextView name;
-        final TextView nameNative;
-        final TextView locale;
+        @Bind(R.id.icon) ImageView icon;
+        @Bind(R.id.name) TextView name;
+        @Bind(R.id.name_native) TextView nameNative;
+        @Bind(R.id.locale) TextView locale;
+        @Bind(R.id.remove_custom) View buttonRemove;
 
         LocaleViewHolder(View view) {
             super(view);
 
-            icon = (ImageView) view.findViewById(R.id.icon);
-            name = (TextView) view.findViewById(R.id.name);
-            nameNative = (TextView) view.findViewById(R.id.name_native);
-            locale = (TextView) view.findViewById(R.id.locale);
+            ButterKnife.bind(this, view);
         }
     }
 

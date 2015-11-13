@@ -12,6 +12,7 @@ import android.graphics.drawable.BitmapDrawable;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.os.AsyncTaskCompat;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v4.widget.ContentLoadingProgressBar;
@@ -39,25 +40,29 @@ import com.example.locale.widget.LocaleService;
 import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity implements LocaleAdapter.LocaleListener, SearchView.OnQueryTextListener, ViewTreeObserver.OnScrollChangedListener {
+import butterknife.Bind;
+import butterknife.ButterKnife;
     private static final String FILTER = "filter";
 
     private LocaleAdapter mAdapter;
     private Toolbar mToolbar;
-    private ContentLoadingProgressBar mLoading;
+    @Bind(R.id.loading) ContentLoadingProgressBar mLoading;
+    @Bind(R.id.recyclerView) RecyclerView mRecyclerView;
     private AsyncTask mPaletteTask;
     private String mFilter;
     private LocaleBroadcastReceiver mLocaleBroadcastReceiver;
     private SearchView mSearchView;
+    @Bind(R.id.add_locale) FloatingActionButton mAddLocale;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
         setContentView(R.layout.activity_main);
+        ButterKnife.bind(this);
 
         initToolbar();
 
-        mLoading = (ContentLoadingProgressBar) findViewById(R.id.loading);
         mLoading.hide();
 
         mFilter = (savedInstanceState != null) ? savedInstanceState.getString(FILTER) : null;
