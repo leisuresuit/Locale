@@ -1,5 +1,6 @@
 package com.example.locale;
 
+import android.content.Context;
 import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
@@ -9,6 +10,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.example.locale.util.ImageUtil;
+import com.example.locale.util.LocaleUtil;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -43,9 +45,15 @@ public class LocaleAdapter extends RecyclerView.Adapter<LocaleAdapter.LocaleView
         mListener = listener;
     }
 
+    public int addCustomLocale(Context context, Locale locale) {
+        int position = LocaleUtil.addCustomLocale(context, locale);
+        notifyItemInserted(position);
+        return position;
+    }
+
     @Override
     public int getItemCount() {
-        return mLocales.length;
+        return LocaleUtil.getCustomLocales().length + mLocales.length;
     }
 
     @Override
@@ -57,12 +65,31 @@ public class LocaleAdapter extends RecyclerView.Adapter<LocaleAdapter.LocaleView
 
     @Override
     public void onBindViewHolder(LocaleViewHolder holder, int position) {
-        final Locale locale = mLocales[position];
-        holder.icon.setImageDrawable(ImageUtil.getFlagIcon(holder.icon.getContext(), locale.getCountry()));
+        final Context context = holder.itemView.getContext();
+        Locale[] customLocales = LocaleUtil.getCustomLocales();
+        int customLocaleCount = customLocales.length;
+        final Locale locale;
+        if (position < customLocaleCount) {
+            locale = customLocales[position];
+            holder.buttonRemove.setVisibility(View.VISIBLE);
+            holder.buttonRemove.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    // Can't use position passed to onBindViewHolder because
+                    // another custom locale before may have been removed,
+                    // which changes the position of this item.
+                    int position = LocaleUtil.removeCustomLocale(context, locale);
+                    notifyItemRemoved(position);
+                }
+            });
+        } else {
+            locale = mLocales[position - customLocaleCount];
+            holder.buttonRemove.setVisibility(View.GONE);
+        }
+        holder.icon.setImageDrawable(ImageUtil.getFlagIcon(context, locale.getCountry()));
         holder.name.setText(locale.getDisplayName());
         holder.nameNative.setText(locale.getDisplayName(locale));
         holder.locale.setText(locale.toString());
-
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

@@ -9,6 +9,13 @@ import android.os.Build;
 import android.util.Log;
 
 import java.io.DataOutputStream;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 
 /**
@@ -16,8 +23,101 @@ import java.util.Locale;
  */
 public class LocaleUtil {
     private static final String LOG_TAG = "LocaleUtil";
+    private static final String FILE_CUSTOM_LOCALES = "custom_locales";
+
+    private static final List<Locale> mCustomLocales = new ArrayList<>();
 
     private LocaleUtil() {}
+
+    public static void initCustomLocales(Context context) {
+        mCustomLocales.clear();
+        FileInputStream fis = null;
+        ObjectInputStream is = null;
+        try {
+            fis = context.openFileInput(FILE_CUSTOM_LOCALES);
+            is = new ObjectInputStream(fis);
+
+            Locale locale = null;
+            do {
+                try {
+                    locale = (Locale) is.readObject();
+                    if (locale != null) {
+                        mCustomLocales.add(locale);
+                    }
+                } catch (ClassNotFoundException | IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            while (locale != null);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (fis != null) {
+                try {
+                    fis.close();
+                } catch (Exception e) {
+                }
+            }
+            if (is != null) {
+                try {
+                    is.close();
+                } catch (Exception e) {
+                }
+            }
+        }
+    }
+
+    public static int addCustomLocale(Context context, Locale locale) {
+        mCustomLocales.add(locale);
+        saveCustomLocales(context);
+        return mCustomLocales.size() - 1;
+    }
+
+    public static int removeCustomLocale(Context context, Locale locale) {
+        int position = -1;
+        Locale[] customLocales = LocaleUtil.getCustomLocales();
+        for (int i = customLocales.length - 1; i >= 0; i--) {
+            if (customLocales[i].equals(locale)) {
+                position = i;
+                mCustomLocales.remove(i);
+                break;
+            }
+        }
+        saveCustomLocales(context);
+        return position;
+    }
+
+    private static void saveCustomLocales(Context context) {
+        FileOutputStream fos = null;
+        ObjectOutputStream os = null;
+        try {
+            fos = context.openFileOutput(FILE_CUSTOM_LOCALES, Context.MODE_PRIVATE);
+            os = new ObjectOutputStream(fos);
+            for (Locale locale : mCustomLocales) {
+                os.writeObject(locale);
+            }
+            os.writeObject(null);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (fos != null) {
+                try {
+                    fos.close();
+                } catch (Exception e) {
+                }
+            }
+            if (os != null) {
+                try {
+                    os.close();
+                } catch (Exception e) {
+                }
+            }
+        }
+    }
+
+    public static Locale[] getCustomLocales() {
+        return mCustomLocales.toArray(new Locale[mCustomLocales.size()]);
+    }
 
     public static boolean setDefaultLocale(Context context, Locale locale) {
         boolean ret;

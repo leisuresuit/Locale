@@ -2,6 +2,7 @@ package com.example.locale;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.res.Configuration;
@@ -31,10 +32,12 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.webkit.WebView;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import com.example.android.supportv7.widget.decorator.DividerItemDecoration;
 import com.example.locale.util.ImageUtil;
+import com.example.locale.util.LocaleUtil;
 import com.example.locale.widget.LocaleService;
 
 import java.util.Locale;
@@ -77,10 +80,14 @@ public class MainActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        LocaleUtil.initCustomLocales(this);
+
         setContentView(R.layout.activity_main);
         ButterKnife.bind(this);
 
         initToolbar();
+
+        mAddLocale.setOnClickListener(this);
 
         mLoading.hide();
 
@@ -171,6 +178,35 @@ public class MainActivity extends AppCompatActivity
     public boolean onQueryTextSubmit(String query) {
         // no-op
         return true;
+    }
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.add_locale:
+                final View view = getLayoutInflater().inflate(R.layout.add_locale, null);
+                new AlertDialog.Builder(this)
+                        .setTitle(R.string.add_locale)
+                        .setView(view)
+                        .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                CharSequence language = ((EditText) view.findViewById(R.id.language_code)).getText();
+                                CharSequence country = ((EditText) view.findViewById(R.id.country_code)).getText();
+                                if (!TextUtils.isEmpty(language) && !TextUtils.isEmpty(country)) {
+                                    addCustomLocale(new Locale(language.toString(), country.toString()));
+                                }
+                            }
+                        })
+                        .setNegativeButton(android.R.string.cancel, null)
+                        .show();
+                break;
+        }
+    }
+
+    private void addCustomLocale(Locale locale) {
+        int position = mAdapter.addCustomLocale(this, locale);
+        mRecyclerView.scrollToPosition(position);
     }
 
     private void showLicenses() {
