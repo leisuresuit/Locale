@@ -73,18 +73,15 @@ public class LocaleUtil {
         return mCustomLocales.size() - 1;
     }
 
-    public static int removeCustomLocale(Context context, Locale locale) {
-        int position = -1;
+    public static void removeCustomLocale(Context context, Locale locale) {
         Locale[] customLocales = LocaleUtil.getCustomLocales();
         for (int i = customLocales.length - 1; i >= 0; i--) {
             if (customLocales[i].equals(locale)) {
-                position = i;
                 mCustomLocales.remove(i);
                 break;
             }
         }
         saveCustomLocales(context);
-        return position;
     }
 
     private static void saveCustomLocales(Context context) {

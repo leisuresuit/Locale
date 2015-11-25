@@ -64,8 +64,8 @@ public class LocaleAdapter extends RecyclerView.Adapter<LocaleAdapter.LocaleView
     }
 
     @Override
-    public void onBindViewHolder(LocaleViewHolder holder, int position) {
-        final Context context = holder.itemView.getContext();
+    public void onBindViewHolder(final LocaleViewHolder holder, int position) {
+        Context context = holder.itemView.getContext();
         Locale[] customLocales = LocaleUtil.getCustomLocales();
         int customLocaleCount = customLocales.length;
         final Locale locale;
@@ -75,11 +75,11 @@ public class LocaleAdapter extends RecyclerView.Adapter<LocaleAdapter.LocaleView
             holder.buttonRemove.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    // Can't use position passed to onBindViewHolder because
-                    // another custom locale before may have been removed,
-                    // which changes the position of this item.
-                    int position = LocaleUtil.removeCustomLocale(context, locale);
-                    notifyItemRemoved(position);
+                    LocaleUtil.removeCustomLocale(v.getContext(), locale);
+                    int pos = holder.getAdapterPosition();
+                    if (pos != RecyclerView.NO_POSITION) {
+                        notifyItemRemoved(pos);
+                    }
                 }
             });
         } else {
